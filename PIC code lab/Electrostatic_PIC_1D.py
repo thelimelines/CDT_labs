@@ -268,8 +268,7 @@ def twostream(npart, L, vbeam=2):
 
 if __name__ == "__main__":
     # Generate initial condition
-    # 
-    npart = 1000   
+    npart = 10000   
     if False:
         # 2-stream instability
         L = 100
@@ -285,13 +284,19 @@ if __name__ == "__main__":
     p = Plot(pos, vel, ncells, L) # This displays an animated figure - Slow!
     s = Summary()                 # Calculates, stores and prints summary info
 
-    diagnostics_to_run = [p, s]   # Remove p to get much faster code!
+    diagnostics_to_run = [s]   # Remove p to get much faster code!
     
     # Run the simulation
+    start_time = time.time()  # Record start time
     pos, vel = run(pos, vel, L, ncells, 
                    out = diagnostics_to_run,        # These are called each output step
                    output_times=linspace(0.,20,50)) # The times to output
-    
+    end_time = time.time()    # Record end time
+
+    # Calculate and print the processing time
+    processing_time = end_time - start_time
+    print(f"Processing time: {processing_time:.2f} seconds")
+
     # Summary stores an array of the first-harmonic amplitude
     # Make a semilog plot to see exponential damping
     plt.figure()
@@ -302,5 +307,4 @@ if __name__ == "__main__":
     
     plt.ioff() # This so that the windows stay open
     plt.show()
-    
     

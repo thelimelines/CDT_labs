@@ -1,9 +1,13 @@
 # Electrostatic PIC code in a 1D cyclic domain
 
 from numpy import arange, concatenate, zeros, linspace, floor, array, pi
-from numpy import sin, cos, sqrt, random, histogram, abs, sqrt, max
+from numpy import sin, cos, sqrt, random, histogram, abs, sqrt, max, column_stack
+from numpy import savetxt
+
+from pathlib import Path
 
 import matplotlib.pyplot as plt # Matplotlib plotting library
+import time
 
 try:
     import matplotlib.gridspec as gridspec  # For plot layout grid
@@ -268,7 +272,7 @@ def twostream(npart, L, vbeam=2):
 
 if __name__ == "__main__":
     # Generate initial condition
-    npart = 10000   
+    npart = 100   
     if False:
         # 2-stream instability
         L = 100
@@ -284,7 +288,7 @@ if __name__ == "__main__":
     p = Plot(pos, vel, ncells, L) # This displays an animated figure - Slow!
     s = Summary()                 # Calculates, stores and prints summary info
 
-    diagnostics_to_run = [s]   # Remove p to get much faster code!
+    diagnostics_to_run = [p,s]   # Remove p to get much faster code!
     
     # Run the simulation
     start_time = time.time()  # Record start time
@@ -296,6 +300,17 @@ if __name__ == "__main__":
     # Calculate and print the processing time
     processing_time = end_time - start_time
     print(f"Processing time: {processing_time:.2f} seconds")
+
+    # Define the data directory using pathlib for cross-platform compatibility
+    base_dir = Path("PIC code lab") / "data"
+    base_dir.mkdir(parents=True, exist_ok=True)  # Create directory if it doesn't exist
+
+    # Save harmonic amplitude and time data
+    output_filename = base_dir / f"landau_damping_harmonics_{time.strftime('%Y%m%dT%H%M%S')}.csv"
+    harmonic_data = column_stack((s.t, s.firstharmonic))  # Combine time and amplitude
+    savetxt(output_filename, harmonic_data, delimiter=",", header="Time,FirstHarmonic", comments="")
+
+    print(f"Data saved to {output_filename}")
 
     # Summary stores an array of the first-harmonic amplitude
     # Make a semilog plot to see exponential damping

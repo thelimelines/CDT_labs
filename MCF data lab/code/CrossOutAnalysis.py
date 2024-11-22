@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 from pathlib import Path
@@ -53,40 +52,25 @@ if __name__ == "__main__":
         if intensity_data.shape != lambda_data.shape:
             print("Error: Intensity data and lambda data must have the same shape.")
         else:
-            y_pixels, x_pixels = intensity_data.shape
+            # Define the pixel_y index
+            pixel_y = 150
 
-            # Determine the common wavelength grid
-            min_wavelength = np.min(lambda_data)
-            max_wavelength = np.max(lambda_data)
-            common_wavelength = np.linspace(min_wavelength, max_wavelength, 1000)
+            # Ensure the pixel_y index is within bounds
+            if pixel_y < 0 or pixel_y >= intensity_data.shape[0]:
+                print(f"Error: pixel_y={pixel_y} is out of bounds for the data.")
+            else:
+                # Extract the row for the given pixel_y
+                intensity_row = intensity_data[pixel_y, :]
+                lambda_row = lambda_data[pixel_y, :]
 
-            # Initialize the new interpolated intensity map
-            interpolated_intensity = np.zeros((y_pixels, len(common_wavelength)))
-
-            for y in range(y_pixels):
-                # Extract the corresponding intensity and wavelength rows
-                intensity_row = intensity_data[y, :]
-                lambda_row = lambda_data[y, :]
-
-                # Interpolate the intensity data to the common wavelength grid
-                interp_func = interp1d(lambda_row, intensity_row, kind='linear', bounds_error=False, fill_value=0)
-                interpolated_intensity[y, :] = interp_func(common_wavelength)
-
-            # Create the heatmap
-            plt.figure(figsize=(12, 8))
-            plt.imshow(
-                interpolated_intensity,
-                aspect='auto',
-                extent=[common_wavelength[0], common_wavelength[-1], 0, y_pixels],
-                origin='lower',
-                cmap='viridis'  # Change colormap as desired
-            )
-            plt.colorbar(label="Intensity")
-            plt.xlabel("Real Wavelength")
-            plt.ylabel("Pixel Y")
-            plt.title("Intensity Heatmap with Real Wavelength Scaling")
-            plt.grid(False)  # Turn off the grid for better visualization
-            plt.xlim(5500,9000)
-            plt.show()
+                # Plot intensity vs. real wavelength
+                plt.figure(figsize=(10, 6))
+                plt.plot(lambda_row, intensity_row, label=f"Pixel Y={pixel_y}")
+                plt.xlabel("Real Wavelength")
+                plt.ylabel("Intensity")
+                plt.title("Intensity vs. Real Wavelength at y=150")
+                plt.legend()
+                plt.grid(True)
+                plt.show()
     else:
         print("One or both data arrays could not be loaded. Exiting...")

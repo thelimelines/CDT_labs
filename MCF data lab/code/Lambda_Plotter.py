@@ -52,7 +52,7 @@ def plot_intensity_image(data):
         return
 
     plt.figure(figsize=(10, 8))
-    plt.imshow(data, cmap="viridis", origin="lower", aspect="auto")
+    plt.imshow(data, cmap="plasma", origin="lower", aspect="auto")
     plt.colorbar(label="Intensity")
     plt.title("CCD Detector Intensity Data")
     plt.xlabel("Pixel X")

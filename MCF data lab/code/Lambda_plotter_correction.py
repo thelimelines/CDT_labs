@@ -79,7 +79,7 @@ if __name__ == "__main__":
                 aspect='auto',
                 extent=[common_wavelength[0], common_wavelength[-1], 0, y_pixels],
                 origin='lower',
-                cmap='viridis'  # Change colormap as desired
+                cmap='plasma'  # Change colormap as desired
             )
             plt.colorbar(label="Intensity")
             plt.xlabel("Real Wavelength")

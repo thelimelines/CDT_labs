@@ -272,7 +272,8 @@ def twostream(npart, L, vbeam=2):
 
 if __name__ == "__main__":
     # Generate initial condition
-    npart = 100   
+    random.seed(999331)
+    npart = int(2e5)   
     if False:
         # 2-stream instability
         L = 100
@@ -288,7 +289,7 @@ if __name__ == "__main__":
     p = Plot(pos, vel, ncells, L) # This displays an animated figure - Slow!
     s = Summary()                 # Calculates, stores and prints summary info
 
-    diagnostics_to_run = [p,s]   # Remove p to get much faster code!
+    diagnostics_to_run = [s]   # Remove p to get much faster code!
     
     # Run the simulation
     start_time = time.time()  # Record start time

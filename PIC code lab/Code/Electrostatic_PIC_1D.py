@@ -1,6 +1,6 @@
 # Electrostatic PIC code in a 1D cyclic domain
 
-from numpy import arange, concatenate, zeros, linspace, floor, array, pi
+from numpy import arange, concatenate, zeros, linspace, floor, array, pi, add
 from numpy import sin, cos, sqrt, random, histogram, abs, sqrt, max, column_stack
 from numpy import savetxt
 
@@ -32,8 +32,8 @@ def rk4step(f, y0, dt, args=()):
     return y0 + (k1 + 2.*k2 + 2.*k3 + k4)*dt / 6.
 
 def calc_density(position, ncells, L):
-    """ Calculate charge density given particle positions
-    
+    """ Calculate charge density given particle positions using a vectorized method
+
     Input
       position  - Array of positions, one for each particle
                   assumed to be between 0 and L
@@ -41,21 +41,20 @@ def calc_density(position, ncells, L):
       L         - Length of the domain
 
     Output
-      density   - contains 1 if evenly distributed
+      density   - Contains 1 if evenly distributed
     """
-    # This is a crude method and could be made more efficient
-    
-    density = zeros([ncells])
-    nparticles = len(position)
-    
-    dx = L / ncells       # Uniform cell spacing
-    for p in position / dx:    # Loop over all the particles, converting position into a cell number
-        plower = int(p)        # Cell to the left (rounding down)
-        offset = p - plower    # Offset from the left
-        density[plower] += 1. - offset
-        density[(plower + 1) % ncells] += offset
-    # nparticles now distributed amongst ncells
-    density *= float(ncells) / float(nparticles)  # Make average density equal to 1
+    dx = L / ncells # Uniform cell spacing
+    weights = 1 - (position / dx) % 1  # Fraction of weight assigned to the lower cell
+    indices = ((position / dx).astype(int)) % ncells # Determine the lower cell indices for all particles
+
+    density = zeros(ncells) # Initialize the density array
+
+    # Add weights to the corresponding cells
+    add.at(density, indices, weights)  # Add weighted contributions to the lower cells
+    add.at(density, (indices + 1) % ncells, 1 - weights)  # Add the remaining contribution to the upper cells
+
+    # Normalize density to ensure the average is 1
+    density *= float(ncells) / len(position)
     return density
 
 def periodic_interp(y, x):
@@ -100,7 +99,6 @@ def fft_integrate(y):
     f[0] = 0. # Set the arbitrary zero-frequency term to zero
     
     return ifft(f).real # Reverse Fourier Transform
-   
 
 def pic(f, ncells, L):
     """ f contains the position and velocity of all particles
@@ -272,8 +270,8 @@ def twostream(npart, L, vbeam=2):
 
 if __name__ == "__main__":
     # Generate initial condition
-    random.seed(999331)
-    npart = int(2e5)   
+    random.seed(10)
+    npart = int(1000)   
     if False:
         # 2-stream instability
         L = 100
@@ -282,7 +280,7 @@ if __name__ == "__main__":
     else:
         # Landau damping
         L = 4.*pi
-        ncells = 20
+        ncells = 35
         pos, vel = landau(npart, L)
     
     # Create some output classes

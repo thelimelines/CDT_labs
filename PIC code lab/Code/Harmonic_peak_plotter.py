@@ -91,15 +91,15 @@ def calculate_frequency_and_uncertainty(times):
 
     return omega, omega_uncertainty
 
-def analyze_harmonic_data(times, harmonics):
+def analyze_harmonic_data(times, harmonics, plot=True):
     """
     Analyzes the harmonic data for peaks, noise, and fits an exponential decay
-    to the peaks above a 2x noise threshold. Also calculates the frequency (omega)
-    and visualizes the signal-dominated and noise-dominated regions.
+    to the peaks above a 2x noise threshold. Also calculates the frequency (omega).
 
     Args:
         times (np.array): Array of time points.
         harmonics (np.array): Array of harmonic amplitudes.
+        plot (bool): If True, generates visualizations. Default is True.
 
     Returns:
         A0 (float): Initial amplitude of the fitted exponential.
@@ -112,49 +112,41 @@ def analyze_harmonic_data(times, harmonics):
         noise_floor_threshold (float): Threshold of 2x RMS noise floor.
     """
     # --- Find Peaks ---
-    # Use scipy's find_peaks to detect peaks in the data
     peaks, _ = find_peaks(harmonics, height=0)
     peaks_times = times[peaks]
     peaks_amplitudes = harmonics[peaks]
 
     # --- Calculate RMS Noise Floor ---
-    # Compute the RMS value of the noise region (last part of the signal)
-    noise = harmonics[peaks[-1]:] if len(peaks) > 0 else harmonics  # Default to last region if unclear
+    noise = harmonics[peaks[-1]:] if len(peaks) > 0 else harmonics
     if len(noise) > 0:
-        noise_rms = np.sqrt(np.mean(noise**2))  # RMS noise floor calculation
-        noise_floor_threshold = 2 * noise_rms  # Define 2x noise floor threshold
+        noise_rms = np.sqrt(np.mean(noise**2))
+        noise_floor_threshold = 2 * noise_rms
     else:
         print("No clear noise-dominated region found. Using default noise floor values.")
-        noise_rms = 0
-        noise_floor_threshold = 0
+        noise_rms, noise_floor_threshold = 0, 0
 
     # --- Filter Peaks Above 2x Noise Floor ---
-    # Keep only peaks above the 2x noise floor threshold for fitting
     valid_indices = peaks_amplitudes >= noise_floor_threshold
     signal_peaks_times = peaks_times[valid_indices]
     signal_peaks_amplitudes = peaks_amplitudes[valid_indices]
 
     # --- Fit Exponential Decay ---
-    # Fit an exponential decay to the peaks above the 2x noise floor threshold
-    if len(signal_peaks_times) > 1:  # Ensure enough points for fitting
+    if len(signal_peaks_times) > 1:
         popt, pcov = fit_exponential_to_peaks(signal_peaks_times, signal_peaks_amplitudes)
-        A0, d = popt  # Extract initial amplitude and decay rate
-        A0_uncertainty, d_uncertainty = np.sqrt(np.diag(pcov))  # Uncertainties in fit parameters
+        A0, d = popt
+        A0_uncertainty, d_uncertainty = np.sqrt(np.diag(pcov))
     else:
         print("Not enough points above the 2x noise floor threshold for fitting.")
         A0, d, A0_uncertainty, d_uncertainty = 0, 0, 0, 0
 
     # --- Calculate Frequency ---
-    # Compute angular frequency (omega) and its uncertainty from the valid peak times
     if len(signal_peaks_times) > 1:
         omega, omega_uncertainty = calculate_frequency_and_uncertainty(signal_peaks_times)
     else:
         omega, omega_uncertainty = 0, 0
 
     # --- Identify Region Boundaries ---
-    # Signal-dominated region: where peaks > 2x noise_floor_threshold
     signal_dominated_end = signal_peaks_times[-1] if len(signal_peaks_times) > 0 else 0
-    # Noise-dominated region: where peaks < noise_floor_threshold
     noise_dominated_start = times[peaks[-1]] if len(peaks) > 0 else times[-1]
 
     # --- Print Results ---
@@ -165,37 +157,33 @@ def analyze_harmonic_data(times, harmonics):
     print(f"Signal Dominated Region Ends at: {signal_dominated_end:.2f}")
     print(f"Noise Dominated Region Starts at: {noise_dominated_start:.2f}")
 
-    # --- Plot Results ---
-    plt.figure(figsize=(10, 6))
-    plt.plot(times, harmonics, label="Harmonic Amplitude")
-    plt.scatter(peaks_times, peaks_amplitudes, color='red', marker='x', label="Detected Peaks")
-    plt.axvline(signal_dominated_end, color='darkgreen', linestyle='--', label="Signal-Dominated Region End")
-    plt.axvline(noise_dominated_start, color='lime', linestyle='--', label="Noise-Dominated Region Start")
-    plt.axhline(noise_rms, color='violet', linestyle='--', label="RMS Noise Floor")
-    plt.axhline(noise_floor_threshold, color='purple', linestyle='--', label="2x Noise Floor Threshold")
+    # --- Plot Results (if enabled) ---
+    if plot:
+        plt.figure(figsize=(10, 6))
+        plt.plot(times, harmonics, label="Harmonic Amplitude")
+        plt.scatter(peaks_times, peaks_amplitudes, color='red', marker='x', label="Detected Peaks")
+        plt.axvline(signal_dominated_end, color='darkgreen', linestyle='--', label="Signal-Dominated Region End")
+        plt.axvline(noise_dominated_start, color='lime', linestyle='--', label="Noise-Dominated Region Start")
+        plt.axhline(noise_rms, color='violet', linestyle='--', label="RMS Noise Floor")
+        plt.axhline(noise_floor_threshold, color='purple', linestyle='--', label="2x Noise Floor Threshold")
 
-    # Compute the fitted curve for the signal region (only valid points)
-    if len(signal_peaks_times) > 1:
-        fit_curve = exponential_model(signal_peaks_times, A0, d)
-        fit_uncertainty_upper = fit_curve * np.exp(d_uncertainty)
-        fit_uncertainty_lower = fit_curve * np.exp(-d_uncertainty)
+        if len(signal_peaks_times) > 1:
+            fit_curve = exponential_model(signal_peaks_times, A0, d)
+            fit_uncertainty_upper = fit_curve * np.exp(d_uncertainty)
+            fit_uncertainty_lower = fit_curve * np.exp(-d_uncertainty)
+            plt.plot(signal_peaks_times, fit_curve, 'orange', linestyle='--',
+                     label=f"Fit: A0*exp(-d*t)\nA0={A0:.2e}±{A0_uncertainty:.2e}, d={d:.2e}±{d_uncertainty:.2e}")
+            plt.fill_between(signal_peaks_times, fit_uncertainty_lower, fit_uncertainty_upper,
+                             color='orange', alpha=0.3, label="Fit Uncertainty")
 
-        # Plot the fit and uncertainty bounds
-        plt.plot(signal_peaks_times, fit_curve, 'orange', linestyle='--',
-                 label=f"Fit: A0*exp(-d*t)\nA0={A0:.2e}±{A0_uncertainty:.2e}, d={d:.2e}±{d_uncertainty:.2e}")
-        plt.fill_between(signal_peaks_times, fit_uncertainty_lower, fit_uncertainty_upper,
-                         color='orange', alpha=0.3, label="Fit Uncertainty")
-
-    # Annotate the plot
-    plt.xlabel("Time [Normalized]")
-    plt.ylabel("Harmonic Amplitude [Normalized]")
-    plt.yscale("log")
-    plt.title("Harmonic Amplitude Analysis")
-    plt.legend()
-    plt.grid(True)
-
-    plt.ioff() # This so that the windows stay open
-    plt.show()
+        plt.xlabel("Time [Normalized]")
+        plt.ylabel("Harmonic Amplitude [Normalized]")
+        plt.yscale("log")
+        plt.title("Harmonic Amplitude Analysis")
+        plt.legend()
+        plt.grid(True)
+        plt.ioff()  # Ensure the windows stay open
+        plt.show()
 
     return A0, d, A0_uncertainty, d_uncertainty, omega, omega_uncertainty, noise_rms, noise_floor_threshold
 
@@ -205,4 +193,4 @@ if __name__ == "__main__":
     if data is not None:
         times, harmonics = data[:, 0], data[:, 1]
 
-        A0, d, A0_uncertainty, d_uncertainty, omega, omega_uncertainty, noise_rms, noise_floor_threshold = analyze_harmonic_data(times, harmonics)
+        A0, d, A0_uncertainty, d_uncertainty, omega, omega_uncertainty, noise_rms, noise_floor_threshold = analyze_harmonic_data(times, harmonics, plot=True)

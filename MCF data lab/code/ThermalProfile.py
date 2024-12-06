@@ -69,13 +69,14 @@ if intensity_data is not None and lambda_data is not None:
         if len(temperatures) > 0:
             plt.figure(figsize=(10, 6))
             plt.errorbar(angles[:len(temperatures)], temperatures, yerr=temp_uncertainties, fmt='o', label="Temperature vs Angle")
-            plt.xlabel("Scattering Angle (radians)")
+            plt.xlabel("Scattering Angle (radians)", fontsize=20)
             #plt.xlim(1.4,2)
-            plt.ylabel("Temperature (K)")
+            plt.ylabel("Temperature (1e6 K)", fontsize=20)
             plt.ylim(-1e6,1.5e7)
             plt.title("Temperature vs Scattering Angle")
+            plt.xticks(fontsize=20)
+            plt.yticks(fontsize=20)
             plt.grid(True)
-            plt.legend()
             plt.show()
         else:
             print("No valid data to plot.")

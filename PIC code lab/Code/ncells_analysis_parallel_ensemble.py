@@ -10,7 +10,7 @@ import time
 npart = 10000
 L = 4 * pi  # Domain length
 output_times = linspace(0, 20, 50)  # 50 output points between t=0 and t=20
-trials = 100  # Number of trials per ncells
+trials = 10  # Number of trials per ncells
 # Range of ncells to simulate
 ncells_range = range(15, 31, 1)
 
@@ -93,9 +93,9 @@ for ncells, data in aggregated_results.items():
     rms_noise_values.append(np.mean(data["rms_noise"]))
     rms_noise_std.append(np.std(data["rms_noise"], ddof=1))
     omega_values.append(np.mean(data["omega"]))
-    omega_uncertainties.append(np.sqrt(np.sum(np.array(data["omega_uncertainty"])**2)) / trials)
+    omega_uncertainties.append(np.sqrt(np.mean(np.array(data["omega_uncertainty"])**2)))
     damping_rates.append(np.mean(data["damping_rate"]))
-    damping_uncertainties.append(np.sqrt(np.sum(np.array(data["damping_uncertainty"])**2)) / trials)
+    damping_uncertainties.append(np.sqrt(np.mean(np.array(data["damping_uncertainty"])**2)))
 
 # Plot results in a 2x2 grid
 fig, axes = plt.subplots(2, 2, figsize=(12, 10))
@@ -105,7 +105,7 @@ for ncells, data in aggregated_results.items():
     trials_simulation_time = data["simulation_time"]
     trials_ncells = [ncells] * trials  # Match ncells to trials
     axes[0, 0].scatter(trials_ncells, trials_simulation_time, alpha=0.2, color='grey', label="Individual Runs" if ncells == 10 else "")  # Trial points
-axes[0, 0].errorbar(ncells_values, simulation_times, yerr=simulation_time_std, fmt='o', label="Mean Simulation Time")
+axes[0, 0].errorbar(ncells_values, simulation_times, yerr=simulation_time_std, fmt='o', label="Mean Simulation Time", capsize=5)
 axes[0, 0].set_title("Simulation Time vs ncells")
 axes[0, 0].set_xlabel("Number of Cells (ncells)")
 axes[0, 0].set_ylabel("Time (s)")
@@ -117,7 +117,7 @@ for ncells, data in aggregated_results.items():
     trials_rms_noise = data["rms_noise"]
     trials_ncells = [ncells] * trials  # Match ncells to trials
     axes[0, 1].scatter(trials_ncells, trials_rms_noise, alpha=0.2, color='grey', label="Individual Runs" if ncells == 10 else "")  # Trial points
-axes[0, 1].errorbar(ncells_values, rms_noise_values, yerr=rms_noise_std, fmt='o', label="Mean RMS Noise")
+axes[0, 1].errorbar(ncells_values, rms_noise_values, yerr=rms_noise_std, fmt='o', label="Mean RMS Noise", capsize=5)
 axes[0, 1].set_title("RMS Noise vs ncells")
 axes[0, 1].set_xlabel("Number of Cells (ncells)")
 axes[0, 1].set_ylabel("RMS Noise")
@@ -130,7 +130,7 @@ for ncells, data in aggregated_results.items():
     trials_omega_unc = data["omega_uncertainty"]
     trials_ncells = [ncells] * trials  # Match ncells to trials
     axes[1, 0].errorbar(trials_ncells, trials_omega, yerr=trials_omega_unc, fmt='o', alpha=0.2, color='grey', label="Individual Runs" if ncells == 10 else "")  # Trial points
-axes[1, 0].errorbar(ncells_values, omega_values, yerr=omega_uncertainties, fmt='o', label="Mean Harmonic Frequency (Omega)")
+axes[1, 0].errorbar(ncells_values, omega_values, yerr=omega_uncertainties, fmt='o', label="Mean Harmonic Frequency (Omega)", capsize=5)
 axes[1, 0].set_title("Harmonic Frequency vs ncells")
 axes[1, 0].set_xlabel("Number of Cells (ncells)")
 axes[1, 0].set_ylabel("Frequency (rad/s)")
@@ -143,7 +143,7 @@ for ncells, data in aggregated_results.items():
     trials_damping_unc = data["damping_uncertainty"]
     trials_ncells = [ncells] * trials  # Match ncells to trials
     axes[1, 1].errorbar(trials_ncells, trials_damping_rate, yerr=trials_damping_unc, fmt='o', alpha=0.2, color='grey', label="Individual Runs" if ncells == 10 else "")  # Trial points
-axes[1, 1].errorbar(ncells_values, damping_rates, yerr=damping_uncertainties, fmt='o', label="Mean Damping Rate (Gamma)")
+axes[1, 1].errorbar(ncells_values, damping_rates, yerr=damping_uncertainties, fmt='o', label="Mean Damping Rate (Gamma)", capsize=5)
 axes[1, 1].set_title("Damping Rate vs ncells")
 axes[1, 1].set_xlabel("Number of Cells (ncells)")
 axes[1, 1].set_ylabel("Damping Rate")

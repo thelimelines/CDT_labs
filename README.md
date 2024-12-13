@@ -79,7 +79,6 @@ The PIC Code Lab focuses on understanding Landau damping using 1D Particle-in-Ce
   
 ---
 
-
 ## **Acknowledgments**
 
 This project is part of the CDT Computational Labs series. Special thanks to supervisors and lab coordinators for their guidance and support.
@@ -89,7 +88,55 @@ This project is part of the CDT Computational Labs series. Special thanks to sup
 ## **MCF Data Lab**
 
 ### **Overview**
+The MCF Data Lab documents experiments and simulations aimed at understanding plasma diagnostics and scaling laws in tokamaks. Key focuses include:
 
-The MCF Data Lab is another key section of this repository. It focuses on analyzing magnetically confined fusion (MCF) simulations and datasets. This section is under development, and updates will be provided as new tools and data become available.
+1. Measuring electron temperatures and densities using Thomson scattering diagnostics.
+2. Conducting parameter sweeps (e.g., magnetic field strength, plasma current, line-averaged density) with METIS simulations.
+3. Analyzing the Lawson criterion and confinement regimes (H-mode vs. L-mode).
+4. Developing Python-based tools for data visualization and analysis.
+
+The project investigates Gaussian fitting of Thomson scattering data and plasma parameter trends.
 
 ---
+
+### **Folder Descriptions**
+
+#### **Code/**
+Python scripts for data processing and analysis:
+- `CrossOutAnalysis.py`: Analyzes and extracts intensity and wavelength data from Thomson scattering diagnostics.
+- `Lambda_Plotter.py`: Visualizes raw CCD intensity signals and applies basic corrections.
+- `Lambda_plotter_correction.py`: Applies advanced corrections to wavelength data using provided calibration files.
+- `ThermalProfile.py`: Calculates the electron temperature profile based on Gaussian fitting and scattering angle.
+- `Triple.py`: Computes the triple product for various plasma scenarios, used to compare against the Lawson criterion.
+- `paramplot.py`: Generates parameter plots for key plasma characteristics (e.g., confinement time, density, beta).
+- `processing.py`: Auxiliary functions for handling simulation outputs and performing initial data processing.
+
+##### **Mentis sims/**
+Contains data for parameter sweeps:
+- **`B0-sweep/`**: Sweeping the toroidal magnetic field strength.
+- **`Ip-sweep/`**: Sweeping plasma current.
+- **`NBI-Heating/`**: Sweeping neutral beam injection heating.
+- **`Nbar-sweep/`**: Varying line-averaged plasma density.
+
+#### **Data/**
+Raw and processed data files used for analysis of thompson scattering:
+- `angle.dat`: Scattering angle data for Thomson diagnostics.
+- `intensity.dat`: Intensity data from the CCD.
+- `lambda.dat`: Calibration data for wavelength corrections.
+
+---
+
+### **Setup and Usage**
+
+#### **Dependencies**
+- Python 3.x
+- Required Libraries:
+  - `numpy`: Numerical computations.
+  - `matplotlib`: Plotting and visualizations.
+  - `scipy`: Advanced numerical methods like curve fitting.
+  - `pandas`: Data manipulation and analysis.
+
+---
+
+### **Acknowledgments**
+This project is part of the Fusion CDT at the York Plasma Institute. Thanks to the lab coordinators for their guidance.

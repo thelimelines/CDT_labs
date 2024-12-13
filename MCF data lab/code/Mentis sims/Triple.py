@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import os
 
 # Path to the folder containing the .mat files
-folder_path = "MCF data lab/code/Mentis sims/NBI-Heating"
+folder_path = "MCF data lab/code/Mentis sims/Nbar-sweep"
 
 # Define the parameters to extract and plot
 parameters = {
@@ -36,7 +36,7 @@ def get_average_and_std(data, start, end, index, subsection='zerod'):
 for file_name in sorted(os.listdir(folder_path)):
     if file_name.endswith(".mat"):
         # Extract NBI power from the filename
-        power = float(file_name.split('_')[1].replace('MW.mat', ''))
+        power = float(file_name.split('_')[1].replace('.mat', ''))
         nbi_powers.append(power)
         
         # Load the .mat file
@@ -74,8 +74,8 @@ triple_product_uncertainty = triple_product * np.sqrt(
 plt.figure(figsize=(8, 6))
 plt.plot(nbi_powers, triple_product, 'o-', label='Triple Product')
 plt.fill_between(nbi_powers, triple_product + triple_product_uncertainty, triple_product - triple_product_uncertainty, alpha=0.2)
-plt.xlabel("NBI Power (MW)")
+plt.xlabel(r"Line average electron density $(\times 10^{19} m^{-3})$")
 plt.ylabel(r"Triple Product ($n_i T_e \tau_e$)")
-plt.title("Triple Product vs. NBI Power")
+plt.title("Triple Product vs. Nbar")
 plt.grid(True)
 plt.show()

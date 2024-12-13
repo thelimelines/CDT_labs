@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import os
 
 # Path to the folder containing the .mat files
-folder_path = "MCF data lab/code/Mentis sims/NBI-Heating"
+folder_path = "MCF data lab/code/Mentis sims/Nbar-sweep"
 
 # Define the parameters to plot
 parameters = {
@@ -12,8 +12,9 @@ parameters = {
     'ne0': {'label': r'$n_e$', 'unit': r'$(\mathrm{m}^{-3})$'},
     'te0': {'label': r'$T_e$', 'unit': r'(eV)'},
     'taue': {'label': r'$\tau_e$', 'unit': '(s)'},
-    'betap': {'label': r'$\beta_p$', 'unit': '(unitless)'}
-}
+    'betap': {'label': r'$\beta_p$', 'unit': '(unitless)'}}#,
+    #'modeh': {'label': r'$mode$', 'unit': '(h-mode 1, l-mode 0)'}
+#}
 
 # Initialize storage for results
 nbi_powers = []
@@ -36,7 +37,7 @@ data_dict = {param: {'mean': [], 'std': []} for param in parameters}
 for file_name in sorted(os.listdir(folder_path)):
     if file_name.endswith(".mat"):
         # Extract NBI power from the filename
-        power = float(file_name.split('_')[1].replace('MW.mat', ''))
+        power = float(file_name.split('_')[1].replace('.mat', ''))
         nbi_powers.append(power)
         
         # Load the .mat file
@@ -69,7 +70,7 @@ for i, param in enumerate(parameters):
     axes[i].grid()
 
 # Shared x-axis label
-axes[-1].set_xlabel("NBI Power (MW)")
+axes[-1].set_xlabel(r"Line average electron density $(\times 10^{19} m^{-3})$")
 
 # Adjust layout
 plt.subplots_adjust(hspace=0)

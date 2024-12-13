@@ -227,7 +227,7 @@ class Summary:
         # Amplitude of the first harmonic
         fh = 2.*abs(fft(d)[1]) / float(ncells)
         
-        print(f"Time: {t} First: {fh}")
+        # print(f"Time: {t} First: {fh}")
         
         self.t.append(t)
         self.firstharmonic.append(fh)
@@ -271,7 +271,7 @@ def twostream(npart, L, vbeam=2):
 if __name__ == "__main__":
     # Generate initial condition
     random.seed(10)
-    npart = int(1000)   
+    npart = int(5000)   
     if False:
         # 2-stream instability
         L = 100
@@ -279,8 +279,8 @@ if __name__ == "__main__":
         pos, vel = twostream(npart, L, 3.) # Might require more npart than Landau!
     else:
         # Landau damping
-        L = 4.*pi
-        ncells = 35
+        L = 10.*pi
+        ncells = 1000
         pos, vel = landau(npart, L)
     
     # Create some output classes
@@ -293,7 +293,7 @@ if __name__ == "__main__":
     start_time = time.time()  # Record start time
     pos, vel = run(pos, vel, L, ncells, 
                    out = diagnostics_to_run,        # These are called each output step
-                   output_times=linspace(0.,20,50)) # The times to output
+                   output_times=linspace(0.,100,500)) # The times to output
     end_time = time.time()    # Record end time
 
     # Calculate and print the processing time

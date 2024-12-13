@@ -12,7 +12,8 @@ def load_data_from_file():
     Opens a file dialog to select a CSV file and loads the data into a NumPy array.
 
     Returns:
-        np.array: Loaded data as a 2D NumPy array, where the first column is time and the second column is the harmonic amplitude.
+        np.array: Loaded data as a 2D NumPy array, 
+                  where the first column is time and the second column is the harmonic amplitude.
     """
     # Set the default directory to the current working directory
     default_dir = Path.cwd()  # Current working directory
@@ -44,7 +45,7 @@ def load_data_from_file():
         return None
 
 def exponential_model(t, A0, d):
-    """Exponential decay model."""
+    """Exponential decay model: A0 * exp(-d * t)."""
     return A0 * np.exp(-d * t)
 
 def fit_exponential_to_peaks(times, peaks_amplitudes):
@@ -59,13 +60,14 @@ def fit_exponential_to_peaks(times, peaks_amplitudes):
         popt (tuple): Optimal parameters (A0, d).
         pcov (np.array): Covariance matrix of the fit.
     """
-    # Perform curve fitting
+    # Perform curve fitting with an initial guess
     popt, pcov = curve_fit(exponential_model, times, peaks_amplitudes, p0=(peaks_amplitudes[0], 0.1))
     return popt, pcov
 
 def calculate_frequency_and_uncertainty(times):
     """
-    Calculates the angular frequency (omega) and its uncertainty based on the time intervals between peaks.
+    Calculates the angular frequency (omega) and its uncertainty 
+    based on the time intervals between consecutive peaks.
 
     Args:
         times (np.array): Times of detected peaks.
@@ -74,7 +76,6 @@ def calculate_frequency_and_uncertainty(times):
         omega (float): Angular frequency (rad/s).
         omega_uncertainty (float): Uncertainty in angular frequency (rad/s).
     """
-    # --- Calculate Time Intervals ---
     # Compute the time intervals between consecutive peaks
     time_intervals = np.diff(times)
 
@@ -82,7 +83,6 @@ def calculate_frequency_and_uncertainty(times):
     mean_dt = np.mean(time_intervals)
     std_dt = np.std(time_intervals)
 
-    # --- Calculate Frequency and Uncertainty ---
     # Omega is defined as pi divided by the mean time interval
     omega = np.pi / mean_dt
 
@@ -91,9 +91,36 @@ def calculate_frequency_and_uncertainty(times):
 
     return omega, omega_uncertainty
 
+def find_noise_region(peaks, harmonics):
+    """
+    Identifies the noise-dominated region based on the rule:
+    If the next peak's amplitude is greater than the current peak's amplitude,
+    all subsequent data is classified as noise.
+
+    Args:
+        peaks (np.array): Indices of detected peaks.
+        harmonics (np.array): Array of harmonic amplitudes.
+
+    Returns:
+        noise_start_index (int): Index where the noise-dominated region begins.
+    """
+    # Iterate through detected peaks to find where noise begins
+    for i in range(len(peaks) - 1):
+        current_peak_amp = harmonics[peaks[i]]
+        next_peak_amp = harmonics[peaks[i + 1]]
+
+        # If the next peak is greater than the current peak, 
+        # noise starts at the next peak index
+        if next_peak_amp > current_peak_amp:
+            return peaks[i + 1]
+    
+    # If no upward step in peak amplitude is found, 
+    # assume noise starts at the end of the data
+    return len(harmonics) - 1
+
 def analyze_harmonic_data(times, harmonics, plot=True):
     """
-    Analyzes the harmonic data for peaks, noise, and fits an exponential decay
+    Analyzes the harmonic data for peaks, noise, and fits an exponential decay 
     to the peaks above a 2x noise threshold. Also calculates the frequency (omega).
 
     Args:
@@ -116,8 +143,11 @@ def analyze_harmonic_data(times, harmonics, plot=True):
     peaks_times = times[peaks]
     peaks_amplitudes = harmonics[peaks]
 
+    # --- Identify Noise Region ---
+    noise_start_index = find_noise_region(peaks, harmonics)
+    noise = harmonics[noise_start_index:] if noise_start_index < len(harmonics) else np.array([])
+
     # --- Calculate RMS Noise Floor ---
-    noise = harmonics[peaks[-1]:] if len(peaks) > 0 else harmonics
     if len(noise) > 0:
         noise_rms = np.sqrt(np.mean(noise**2))
         noise_floor_threshold = 2 * noise_rms
@@ -146,8 +176,11 @@ def analyze_harmonic_data(times, harmonics, plot=True):
         omega, omega_uncertainty = 0, 0
 
     # --- Identify Region Boundaries ---
+    # Signal-dominated end is at the last valid signal peak time if it exists
     signal_dominated_end = signal_peaks_times[-1] if len(signal_peaks_times) > 0 else 0
-    noise_dominated_start = times[peaks[-1]] if len(peaks) > 0 else times[-1]
+
+    # Noise-dominated start should use the noise_start_index found from find_noise_region
+    noise_dominated_start = times[noise_start_index] if noise_start_index < len(times) else times[-1]
 
     # --- Print Results ---
     print(f"Fit Parameters: A0 = {A0:.2e} ± {A0_uncertainty:.2e}, d = {d:.2e} ± {d_uncertainty:.2e}")
@@ -168,13 +201,14 @@ def analyze_harmonic_data(times, harmonics, plot=True):
         plt.axhline(noise_floor_threshold, color='purple', linestyle='--', label="2x Noise Floor Threshold")
 
         if len(signal_peaks_times) > 1:
+            # Plot the exponential fit curve
             fit_curve = exponential_model(signal_peaks_times, A0, d)
-            fit_uncertainty_upper = fit_curve * np.exp(d_uncertainty)
-            fit_uncertainty_lower = fit_curve * np.exp(-d_uncertainty)
             plt.plot(signal_peaks_times, fit_curve, 'orange', linestyle='--',
-                     label=f"Fit: A0*exp(-d*t)\nA0={A0:.2e}±{A0_uncertainty:.2e}, d={d:.2e}±{d_uncertainty:.2e}")
-            plt.fill_between(signal_peaks_times, fit_uncertainty_lower, fit_uncertainty_upper,
-                             color='orange', alpha=0.3, label="Fit Uncertainty")
+                     label=(f"Fit: A0*exp(-d*t)\nA0={A0:.2e}±{A0_uncertainty:.2e}, "
+                            f"d={d:.2e}±{d_uncertainty:.2e}"))
+
+            # Optional: If you wanted to show fit uncertainty bounds, you could do so here.
+            # For now, we skip it as the original code had a placeholder logic.
 
         plt.xlabel("Time [Normalized]")
         plt.ylabel("Harmonic Amplitude [Normalized]")
@@ -182,7 +216,7 @@ def analyze_harmonic_data(times, harmonics, plot=True):
         plt.title("Harmonic Amplitude Analysis")
         plt.legend()
         plt.grid(True)
-        plt.ioff()  # Ensure the windows stay open
+        plt.ioff()  # Ensure the window stays open if interactive
         plt.show()
 
     return A0, d, A0_uncertainty, d_uncertainty, omega, omega_uncertainty, noise_rms, noise_floor_threshold
@@ -193,4 +227,4 @@ if __name__ == "__main__":
     if data is not None:
         times, harmonics = data[:, 0], data[:, 1]
 
-        A0, d, A0_uncertainty, d_uncertainty, omega, omega_uncertainty, noise_rms, noise_floor_threshold = analyze_harmonic_data(times, harmonics, plot=True)
+        analyze_harmonic_data(times, harmonics, plot=True)
